@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FS Check — Latency Scanner</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --panel: #161311;
+    --line: #3a2a1c;
+    --text: #f5e9dd;
+    --text-dim: #a3897a;
+    --accent: #ff8c2b;
+    --accent-dim: #b35e17;
+    --warn: #ffb454;
+    --bad: #ff5c5c;
+    --mono: "JetBrains Mono", "Consolas", "SFMono-Regular", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(255,140,43,0.06), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(255,140,43,0.05), transparent 40%);
+    color: var(--text);
+    font-family: var(--mono);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .console {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .titlebar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .brand {
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .brand strong {
+    color: var(--accent);
+  }
+
+  .clock {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  h1 {
+    font-size: 22px;
+    margin: 4px 0 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  h1 span {
+    color: var(--accent-dim);
+  }
+
+  .scan-btn {
+    width: 100%;
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, rgba(255,140,43,0.14), rgba(255,140,43,0.04));
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.05s ease;
+  }
+
+  .scan-btn:hover { background: rgba(255,140,43,0.2); }
+  .scan-btn:active { transform: scale(0.995); }
+  .scan-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .scan-btn .arrow {
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.2s ease;
+  }
+  .scan-btn.scanning .arrow {
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .scan-btn.counting #btnLabel {
+    font-variant-numeric: tabular-nums;
+  }
+
+  #result-wrap {
+    margin-top: 18px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+  }
+  #result-wrap.open {
+    max-height: 600px;
+  }
+
+  .panel {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 4px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .panel::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.7;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .status-pill {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+  .status-pill.stable { background: rgba(255,140,43,0.12); color: var(--accent); border: 1px solid var(--accent-dim); }
+  .status-pill.unstable { background: rgba(255,180,84,0.12); color: var(--warn); border: 1px solid var(--warn); }
+  .status-pill.down { background: rgba(255,92,92,0.12); color: var(--bad); border: 1px solid var(--bad); }
+
+  .metric-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .metric {
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+  }
+
+  .metric-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .metric-value {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .metric-value.accent { color: var(--accent); }
+
+  .ping-log {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.9;
+  }
+
+  .ping-log .row {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px dashed rgba(255,255,255,0.05);
+    padding: 2px 0;
+  }
+
+  .ping-log .row span:last-child {
+    color: var(--text);
+  }
+
+  .again-btn {
+    margin-top: 14px;
+    width: 100%;
+    padding: 11px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .again-btn:hover {
+    border-color: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .error-text {
+    color: var(--bad);
+    font-size: 13px;
+  }
+
+  footer {
+    margin-top: 18px;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+
+<div class="console">
+  <div class="titlebar">
+    <div class="brand"><strong>FS</strong>_CHECK / v1.0</div>
+    <div class="clock" id="clock"></div>
+  </div>
+
+  <h1>Network latency <span>scanner</span></h1>
+
+  <div id="result-wrap">
+    <div class="panel" id="panel"></div>
+  </div>
+
+  <button class="scan-btn" id="scanBtn" onclick="startScan()">
+    <span class="arrow">&#10148;</span><span id="btnLabel">Scan it</span>
+  </button>
+
+  <footer>target: google.com &middot; 5 probes per scan &middot; icmp echo</footer>
+</div>
+
+<script>
+function tickClock() {
+  const el = document.getElementById('clock');
+  const now = new Date();
+  el.textContent = now.toLocaleTimeString([], {hour12:false});
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+function startScan() {
+  const btn = document.getElementById('scanBtn');
+  const label = document.getElementById('btnLabel');
+
+  btn.disabled = true;
+  btn.classList.add('counting');
+
+  let n = 5;
+  label.textContent = `Scanning in ${n}...`;
+
+  const interval = setInterval(() => {
+    n -= 1;
+    if (n > 0) {
+      label.textContent = `Scanning in ${n}...`;
+    } else {
+      clearInterval(interval);
+      btn.classList.remove('counting');
+      runScan();
+    }
+  }, 1000);
+}
+
+async function runScan() {
+  const btn = document.getElementById('scanBtn');
+  const label = document.getElementById('btnLabel');
+  const wrap = document.getElementById('result-wrap');
+  const panel = document.getElementById('panel');
+
+  btn.classList.add('scanning');
+  label.textContent = 'Scanning...';
+
+  try {
+    const res = await fetch('/scan');
+    const data = await res.json();
+    panel.innerHTML = renderResult(data);
+    wrap.classList.add('open');
+  } catch (err) {
+    panel.innerHTML = `<div class="error-text">Scan failed: could not reach server.</div>`;
+    wrap.classList.add('open');
+  }
+
+  btn.disabled = false;
+  btn.classList.remove('scanning');
+  label.textContent = 'Scan again';
+}
+
+function renderResult(data) {
+  if (!data.success) {
+    return `
+      <div class="panel-header">
+        <span>Result</span>
+        <span class="status-pill down">No response</span>
+      </div>
+      <div class="error-text">${data.message}</div>
+    `;
+  }
+
+  const statusClass = data.stable ? 'stable' : 'unstable';
+  const statusLabel = data.stable ? 'Stable' : 'Unstable';
+
+  const rows = data.pings_ms.map((p, i) =>
+    `<div class="row"><span>probe ${i + 1}</span><span>${p} ms</span></div>`
+  ).join('');
+
+  return `
+    <div class="panel-header">
+      <span>Result &middot; ${data.target}</span>
+      <span class="status-pill ${statusClass}">${statusLabel}</span>
+    </div>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="metric-label">Average latency</div>
+        <div class="metric-value accent">${data.average_ms} ms</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Jitter</div>
+        <div class="metric-value">${data.jitter_ms} ms</div>
+      </div>
+    </div>
+    <div class="ping-log">${rows}</div>
+  `;
+}
+</script>
+
+</body>
+</html>
