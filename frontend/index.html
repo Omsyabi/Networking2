@@ -2,357 +2,1357 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FS Check — Latency Scanner</title>
-<style>
-  :root {
-    --bg: #0a0a0a;
-    --panel: #161311;
-    --line: #3a2a1c;
-    --text: #f5e9dd;
-    --text-dim: #a3897a;
-    --accent: #ff8c2b;
-    --accent-dim: #b35e17;
-    --warn: #ffb454;
-    --bad: #ff5c5c;
-    --mono: "JetBrains Mono", "Consolas", "SFMono-Regular", monospace;
-  }
 
-  * { box-sizing: border-box; }
+<style>
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --background: #f4efe7;
+  --background-dark: #ebe2d5;
+
+  --card: #fffdf9;
+  --card-soft: #f9f5ee;
+
+  --border: #e4d8c8;
+  --border-dark: #d5c5b2;
+
+  --text: #352b24;
+  --text-soft: #6f6257;
+  --text-light: #9a8d80;
+
+  --primary: #9b5d32;
+  --primary-dark: #744321;
+  --primary-light: #c88655;
+
+  --cream: #f1e3d2;
+
+  --success: #607b5b;
+  --success-bg: #e8f0e4;
+
+  --warning: #b77b35;
+  --warning-bg: #f8ecd9;
+
+  --danger: #b9574e;
+  --danger-bg: #f8e4e1;
+
+  --shadow:
+    0 12px 35px rgba(83, 59, 38, 0.08);
+
+  --shadow-hover:
+    0 18px 45px rgba(83, 59, 38, 0.13);
+
+  --radius: 18px;
+
+  --mono:
+    "JetBrains Mono",
+    "SFMono-Regular",
+    Consolas,
+    monospace;
+
+  --sans:
+    Inter,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+}
+
+
+/* =========================================================
+   BODY
+========================================================= */
+
+body {
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at 10% 0%,
+      rgba(200, 134, 85, 0.16),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      rgba(155, 93, 50, 0.08),
+      transparent 35%
+    ),
+    var(--background);
+
+  color: var(--text);
+
+  font-family: var(--sans);
+
+  padding: 40px 20px;
+
+  overflow-x: hidden;
+}
+
+
+/* Decorative background */
+
+body::before {
+  content: "";
+
+  position: fixed;
+  inset: 0;
+
+  pointer-events: none;
+
+  opacity: 0.35;
+
+  background-image:
+    linear-gradient(
+      rgba(120, 90, 65, 0.035) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(120, 90, 65, 0.035) 1px,
+      transparent 1px
+    );
+
+  background-size: 40px 40px;
+
+  mask-image:
+    linear-gradient(
+      to bottom,
+      black,
+      transparent 80%
+    );
+}
+
+
+/* =========================================================
+   MAIN CONTAINER
+========================================================= */
+
+.console {
+  width: 100%;
+  max-width: 900px;
+
+  margin: auto;
+
+  position: relative;
+  z-index: 1;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.titlebar {
+  display: flex;
+
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 28px;
+}
+
+
+.brand-area {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+
+.brand-icon {
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 13px;
+
+  background: var(--primary);
+
+  color: white;
+
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: bold;
+
+  box-shadow:
+    0 8px 20px rgba(155, 93, 50, 0.25);
+}
+
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+
+.brand {
+  font-family: var(--mono);
+
+  font-size: 12px;
+
+  letter-spacing: 0.08em;
+
+  color: var(--text);
+}
+
+
+.brand strong {
+  color: var(--primary);
+}
+
+
+.brand-subtitle {
+  font-size: 11px;
+
+  color: var(--text-light);
+}
+
+
+.clock {
+  padding: 9px 13px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 10px;
+
+  background: rgba(255,255,255,0.55);
+
+  color: var(--text-soft);
+
+  font-family: var(--mono);
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.hero {
+  margin-bottom: 25px;
+}
+
+
+h1 {
+  font-size: clamp(34px, 6vw, 52px);
+
+  line-height: 1.05;
+
+  letter-spacing: -0.045em;
+
+  font-weight: 750;
+
+  color: var(--text);
+
+  margin-bottom: 13px;
+}
+
+
+h1 span {
+  color: var(--primary);
+}
+
+
+.hero-description {
+  max-width: 570px;
+
+  color: var(--text-soft);
+
+  font-size: 14px;
+
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   CONTROL CARD
+========================================================= */
+
+.control-card {
+  display: grid;
+
+  grid-template-columns: 1fr auto;
+
+  align-items: center;
+
+  gap: 20px;
+
+  padding: 20px;
+
+  background: var(--card);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius);
+
+  box-shadow: var(--shadow);
+
+  margin-bottom: 20px;
+}
+
+
+.target-info {
+  display: flex;
+
+  align-items: center;
+
+  gap: 13px;
+}
+
+
+.target-icon {
+  width: 43px;
+  height: 43px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: var(--cream);
+
+  color: var(--primary);
+
+  font-size: 19px;
+}
+
+
+.target-label {
+  color: var(--text-light);
+
+  font-family: var(--mono);
+
+  font-size: 9px;
+
+  letter-spacing: 0.1em;
+
+  text-transform: uppercase;
+
+  margin-bottom: 4px;
+}
+
+
+.target-value {
+  color: var(--text);
+
+  font-family: var(--mono);
+
+  font-size: 14px;
+
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   SCAN BUTTON
+========================================================= */
+
+.scan-btn {
+  min-width: 190px;
+
+  border: none;
+
+  padding: 14px 20px;
+
+  border-radius: 12px;
+
+  background: var(--primary);
+
+  color: #fff;
+
+  font-family: var(--sans);
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.06em;
+
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 9px;
+
+  box-shadow:
+    0 8px 20px rgba(155, 93, 50, 0.22);
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.scan-btn:hover {
+  background: var(--primary-dark);
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 12px 25px rgba(155, 93, 50, 0.27);
+}
+
+
+.scan-btn:active {
+  transform: translateY(0);
+}
+
+
+.scan-btn:disabled {
+  opacity: 0.65;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+
+.scan-btn .arrow {
+  font-size: 16px;
+
+  transition: transform 0.25s ease;
+}
+
+
+.scan-btn:hover .arrow {
+  transform: translateX(3px);
+}
+
+
+.scan-btn.scanning .arrow {
+  animation: spin 0.9s linear infinite;
+}
+
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+.scan-btn.counting #btnLabel {
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* =========================================================
+   RESULTS CONTAINER
+========================================================= */
+
+#result-wrap {
+  max-height: 0;
+
+  overflow: hidden;
+
+  opacity: 0;
+
+  transform: translateY(12px);
+
+  transition:
+    max-height 0.55s ease,
+    opacity 0.35s ease,
+    transform 0.35s ease;
+}
+
+
+#result-wrap.open {
+  max-height: 800px;
+
+  opacity: 1;
+
+  transform: translateY(0);
+}
+
+
+/* =========================================================
+   RESULT PANEL
+========================================================= */
+
+.panel {
+  position: relative;
+
+  overflow: hidden;
+
+  padding: 24px;
+
+  background: var(--card);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius);
+
+  box-shadow: var(--shadow);
+}
+
+
+.panel::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 4px;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--primary),
+      var(--primary-light),
+      transparent
+    );
+}
+
+
+/* =========================================================
+   RESULT HEADER
+========================================================= */
+
+.panel-header {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding-bottom: 18px;
+
+  margin-bottom: 20px;
+
+  border-bottom: 1px solid var(--border);
+
+  font-family: var(--mono);
+
+  font-size: 11px;
+
+  color: var(--text-soft);
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.08em;
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.status-pill {
+  padding: 7px 12px;
+
+  border-radius: 999px;
+
+  font-family: var(--sans);
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.04em;
+}
+
+
+.status-pill.stable {
+  background: var(--success-bg);
+
+  color: var(--success);
+
+  border: 1px solid #cbdcc6;
+}
+
+
+.status-pill.unstable {
+  background: var(--warning-bg);
+
+  color: var(--warning);
+
+  border: 1px solid #ecd5ad;
+}
+
+
+.status-pill.down {
+  background: var(--danger-bg);
+
+  color: var(--danger);
+
+  border: 1px solid #edc6c1;
+}
+
+
+/* =========================================================
+   METRICS
+========================================================= */
+
+.metric-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 15px;
+
+  margin-bottom: 22px;
+}
+
+
+.metric {
+  padding: 20px;
+
+  background: var(--card-soft);
+
+  border: 1px solid var(--border);
+
+  border-radius: 14px;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+
+.metric:hover {
+  transform: translateY(-3px);
+
+  border-color: var(--border-dark);
+
+  box-shadow: var(--shadow);
+}
+
+
+.metric-label {
+  margin-bottom: 9px;
+
+  color: var(--text-light);
+
+  font-family: var(--mono);
+
+  font-size: 9px;
+
+  font-weight: 600;
+
+  letter-spacing: 0.1em;
+
+  text-transform: uppercase;
+}
+
+
+.metric-value {
+  color: var(--text);
+
+  font-family: var(--mono);
+
+  font-size: clamp(23px, 5vw, 30px);
+
+  font-weight: 700;
+
+  letter-spacing: -0.04em;
+}
+
+
+.metric-value.accent {
+  color: var(--primary);
+}
+
+
+/* =========================================================
+   PING SECTION
+========================================================= */
+
+.ping-title {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  margin-bottom: 10px;
+
+  color: var(--text-soft);
+
+  font-size: 10px;
+
+  font-family: var(--mono);
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.1em;
+}
+
+
+.ping-log {
+  border: 1px solid var(--border);
+
+  border-radius: 12px;
+
+  overflow: hidden;
+
+  background: #fcfaf6;
+}
+
+
+.ping-log .row {
+  min-height: 39px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  padding: 7px 13px;
+
+  border-bottom: 1px solid var(--border);
+
+  font-family: var(--mono);
+
+  font-size: 11px;
+
+  color: var(--text-light);
+
+  transition:
+    background 0.15s ease,
+    padding 0.15s ease;
+}
+
+
+.ping-log .row:last-child {
+  border-bottom: none;
+}
+
+
+.ping-log .row:hover {
+  background: var(--cream);
+
+  padding-left: 17px;
+}
+
+
+.ping-log .row span:last-child {
+  color: var(--text);
+
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.error-text {
+  padding: 15px;
+
+  border-radius: 10px;
+
+  background: var(--danger-bg);
+
+  border: 1px solid #edc6c1;
+
+  color: var(--danger);
+
+  font-family: var(--mono);
+
+  font-size: 12px;
+
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+footer {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  margin-top: 18px;
+
+  color: var(--text-light);
+
+  font-family: var(--mono);
+
+  font-size: 9px;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+
+  text-align: center;
+}
+
+
+footer::before {
+  content: "";
+
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: var(--success);
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 700px) {
 
   body {
-    margin: 0;
-    min-height: 100vh;
-    background: var(--bg);
-    background-image:
-      radial-gradient(circle at 15% 10%, rgba(255,140,43,0.06), transparent 40%),
-      radial-gradient(circle at 85% 90%, rgba(255,140,43,0.05), transparent 40%);
-    color: var(--text);
-    font-family: var(--mono);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 32px 16px;
+    padding: 25px 16px;
   }
 
   .console {
-    width: 100%;
-    max-width: 640px;
+    max-width: 620px;
   }
 
-  .titlebar {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 6px;
-  }
-
-  .brand {
-    font-size: 13px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-  }
-
-  .brand strong {
-    color: var(--accent);
-  }
-
-  .clock {
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-
-  h1 {
-    font-size: 22px;
-    margin: 4px 0 22px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-  }
-
-  h1 span {
-    color: var(--accent-dim);
+  .control-card {
+    grid-template-columns: 1fr;
   }
 
   .scan-btn {
     width: 100%;
-    padding: 16px;
-    font-family: var(--mono);
-    font-size: 14px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    background: linear-gradient(180deg, rgba(255,140,43,0.14), rgba(255,140,43,0.04));
-    border: 1px solid var(--accent-dim);
-    color: var(--accent);
-    border-radius: 3px;
-    cursor: pointer;
-    transition: background 0.15s ease, transform 0.05s ease;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 500px) {
+
+  body {
+    padding: 18px 12px;
   }
 
-  .scan-btn:hover { background: rgba(255,140,43,0.2); }
-  .scan-btn:active { transform: scale(0.995); }
-  .scan-btn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
+  .titlebar {
+    margin-bottom: 23px;
   }
 
-  .scan-btn .arrow {
-    display: inline-block;
-    margin-right: 8px;
-    transition: transform 0.2s ease;
-  }
-  .scan-btn.scanning .arrow {
-    animation: spin 0.9s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .brand-icon {
+    width: 39px;
+    height: 39px;
 
-  .scan-btn.counting #btnLabel {
-    font-variant-numeric: tabular-nums;
+    border-radius: 11px;
   }
 
-  #result-wrap {
-    margin-top: 18px;
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease;
+  .brand {
+    font-size: 10px;
   }
-  #result-wrap.open {
-    max-height: 600px;
+
+  .brand-subtitle {
+    font-size: 9px;
+  }
+
+  .clock {
+    font-size: 9px;
+
+    padding: 7px 9px;
+  }
+
+  h1 {
+    font-size: 35px;
+
+    margin-bottom: 12px;
+  }
+
+  .hero-description {
+    font-size: 12px;
+  }
+
+  .control-card {
+    padding: 15px;
+
+    border-radius: 15px;
+  }
+
+  .target-value {
+    font-size: 12px;
+  }
+
+  .scan-btn {
+    min-height: 50px;
   }
 
   .panel {
-    border: 1px solid var(--line);
-    background: var(--panel);
-    border-radius: 4px;
-    padding: 18px 20px;
-    position: relative;
-    overflow: hidden;
-  }
+    padding: 17px;
 
-  .panel::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    opacity: 0.7;
+    border-radius: 15px;
   }
 
   .panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--line);
-    padding-bottom: 10px;
-    margin-bottom: 12px;
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--text-dim);
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 10px;
   }
 
   .status-pill {
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
+    align-self: flex-start;
   }
-  .status-pill.stable { background: rgba(255,140,43,0.12); color: var(--accent); border: 1px solid var(--accent-dim); }
-  .status-pill.unstable { background: rgba(255,180,84,0.12); color: var(--warn); border: 1px solid var(--warn); }
-  .status-pill.down { background: rgba(255,92,92,0.12); color: var(--bad); border: 1px solid var(--bad); }
 
   .metric-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 14px;
+    grid-template-columns: 1fr;
+
+    gap: 10px;
   }
 
   .metric {
-    padding: 10px 12px;
-    background: rgba(255,255,255,0.02);
-    border: 1px solid var(--line);
-    border-radius: 3px;
-  }
-
-  .metric-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-dim);
-    margin-bottom: 4px;
+    padding: 16px;
   }
 
   .metric-value {
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .metric-value.accent { color: var(--accent); }
-
-  .ping-log {
-    font-size: 12px;
-    color: var(--text-dim);
-    line-height: 1.9;
-  }
-
-  .ping-log .row {
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px dashed rgba(255,255,255,0.05);
-    padding: 2px 0;
-  }
-
-  .ping-log .row span:last-child {
-    color: var(--text);
-  }
-
-  .again-btn {
-    margin-top: 14px;
-    width: 100%;
-    padding: 11px;
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    background: transparent;
-    border: 1px solid var(--line);
-    color: var(--text-dim);
-    border-radius: 3px;
-    cursor: pointer;
-    transition: border-color 0.15s ease, color 0.15s ease;
-  }
-  .again-btn:hover {
-    border-color: var(--accent-dim);
-    color: var(--accent);
-  }
-
-  .error-text {
-    color: var(--bad);
-    font-size: 13px;
+    font-size: 24px;
   }
 
   footer {
-    margin-top: 18px;
-    font-size: 11px;
-    color: var(--text-dim);
-    text-align: center;
-    letter-spacing: 0.04em;
+    line-height: 1.6;
   }
+}
+
+
+/* =========================================================
+   SMALL PHONES
+========================================================= */
+
+@media (max-width: 350px) {
+
+  body {
+    padding: 15px 10px;
+  }
+
+  .clock {
+    display: none;
+  }
+
+  h1 {
+    font-size: 30px;
+  }
+
+  .panel {
+    padding: 14px;
+  }
+
+  .ping-log .row {
+    font-size: 9px;
+  }
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
+  }
+}
+
 </style>
 </head>
+
 <body>
 
 <div class="console">
+
+  <!-- HEADER -->
+
   <div class="titlebar">
-    <div class="brand"><strong>FS</strong>_CHECK / v1.0</div>
+
+    <div class="brand-area">
+
+      <div class="brand-icon">
+        FS
+      </div>
+
+      <div class="brand-text">
+
+        <div class="brand">
+          <strong>FS</strong> CHECK
+        </div>
+
+        <div class="brand-subtitle">
+          Network monitoring system
+        </div>
+
+      </div>
+
+    </div>
+
     <div class="clock" id="clock"></div>
+
   </div>
 
-  <h1>Network latency <span>scanner</span></h1>
+
+  <!-- HERO -->
+
+  <section class="hero">
+
+    <h1>
+      Network latency
+      <span>scanner</span>
+    </h1>
+
+    <p class="hero-description">
+      Check your connection response time and monitor
+      network stability using multiple latency probes.
+    </p>
+
+  </section>
+
+
+  <!-- CONTROL -->
+
+  <div class="control-card">
+
+    <div class="target-info">
+
+      <div class="target-icon">
+        ◎
+      </div>
+
+      <div>
+
+        <div class="target-label">
+          Scan target
+        </div>
+
+        <div class="target-value">
+          google.com
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <button
+      class="scan-btn"
+      id="scanBtn"
+      onclick="startScan()"
+    >
+
+      <span class="arrow">
+        &#10148;
+      </span>
+
+      <span id="btnLabel">
+        Scan it
+      </span>
+
+    </button>
+
+  </div>
+
+
+  <!-- RESULTS -->
 
   <div id="result-wrap">
+
     <div class="panel" id="panel"></div>
+
   </div>
 
-  <button class="scan-btn" id="scanBtn" onclick="startScan()">
-    <span class="arrow">&#10148;</span><span id="btnLabel">Scan it</span>
-  </button>
 
-  <footer>target: google.com &middot; 5 probes per scan &middot; icmp echo</footer>
+  <!-- FOOTER -->
+
+  <footer>
+    5 probes per scan &middot; ICMP echo
+  </footer>
+
 </div>
 
+
 <script>
+
 function tickClock() {
+
   const el = document.getElementById('clock');
+
   const now = new Date();
-  el.textContent = now.toLocaleTimeString([], {hour12:false});
+
+  el.textContent =
+    now.toLocaleTimeString([], {
+      hour12:false
+    });
+
 }
+
 setInterval(tickClock, 1000);
+
 tickClock();
 
+
 function startScan() {
-  const btn = document.getElementById('scanBtn');
-  const label = document.getElementById('btnLabel');
+
+  const btn =
+    document.getElementById('scanBtn');
+
+  const label =
+    document.getElementById('btnLabel');
 
   btn.disabled = true;
+
   btn.classList.add('counting');
 
   let n = 5;
-  label.textContent = `Scanning in ${n}...`;
+
+  label.textContent =
+    `Scanning in ${n}...`;
+
 
   const interval = setInterval(() => {
+
     n -= 1;
+
     if (n > 0) {
-      label.textContent = `Scanning in ${n}...`;
+
+      label.textContent =
+        `Scanning in ${n}...`;
+
     } else {
+
       clearInterval(interval);
+
       btn.classList.remove('counting');
+
       runScan();
+
     }
+
   }, 1000);
+
 }
+
 
 async function runScan() {
-  const btn = document.getElementById('scanBtn');
-  const label = document.getElementById('btnLabel');
-  const wrap = document.getElementById('result-wrap');
-  const panel = document.getElementById('panel');
+
+  const btn =
+    document.getElementById('scanBtn');
+
+  const label =
+    document.getElementById('btnLabel');
+
+  const wrap =
+    document.getElementById('result-wrap');
+
+  const panel =
+    document.getElementById('panel');
+
 
   btn.classList.add('scanning');
+
   label.textContent = 'Scanning...';
 
+
   try {
-    const res = await fetch('/scan');
-    const data = await res.json();
-    panel.innerHTML = renderResult(data);
+
+    const res =
+      await fetch('/scan');
+
+    const data =
+      await res.json();
+
+
+    panel.innerHTML =
+      renderResult(data);
+
     wrap.classList.add('open');
+
+
   } catch (err) {
-    panel.innerHTML = `<div class="error-text">Scan failed: could not reach server.</div>`;
+
+    panel.innerHTML = `
+      <div class="error-text">
+        Scan failed: could not reach server.
+      </div>
+    `;
+
     wrap.classList.add('open');
+
   }
+
 
   btn.disabled = false;
+
   btn.classList.remove('scanning');
+
   label.textContent = 'Scan again';
+
 }
+
 
 function renderResult(data) {
+
   if (!data.success) {
+
     return `
+
       <div class="panel-header">
-        <span>Result</span>
-        <span class="status-pill down">No response</span>
+
+        <span>
+          Scan result
+        </span>
+
+        <span class="status-pill down">
+          No response
+        </span>
+
       </div>
-      <div class="error-text">${data.message}</div>
+
+      <div class="error-text">
+        ${data.message}
+      </div>
+
     `;
+
   }
 
-  const statusClass = data.stable ? 'stable' : 'unstable';
-  const statusLabel = data.stable ? 'Stable' : 'Unstable';
 
-  const rows = data.pings_ms.map((p, i) =>
-    `<div class="row"><span>probe ${i + 1}</span><span>${p} ms</span></div>`
-  ).join('');
+  const statusClass =
+    data.stable
+      ? 'stable'
+      : 'unstable';
+
+
+  const statusLabel =
+    data.stable
+      ? 'Stable'
+      : 'Unstable';
+
+
+  const rows =
+    data.pings_ms.map((p, i) =>
+
+      `<div class="row">
+
+        <span>
+          probe ${i + 1}
+        </span>
+
+        <span>
+          ${p} ms
+        </span>
+
+      </div>`
+
+    ).join('');
+
 
   return `
+
     <div class="panel-header">
-      <span>Result &middot; ${data.target}</span>
-      <span class="status-pill ${statusClass}">${statusLabel}</span>
+
+      <span>
+        Result &middot; ${data.target}
+      </span>
+
+      <span class="status-pill ${statusClass}">
+        ${statusLabel}
+      </span>
+
     </div>
+
+
     <div class="metric-grid">
+
       <div class="metric">
-        <div class="metric-label">Average latency</div>
-        <div class="metric-value accent">${data.average_ms} ms</div>
+
+        <div class="metric-label">
+          Average latency
+        </div>
+
+        <div class="metric-value accent">
+          ${data.average_ms} ms
+        </div>
+
       </div>
+
+
       <div class="metric">
-        <div class="metric-label">Jitter</div>
-        <div class="metric-value">${data.jitter_ms} ms</div>
+
+        <div class="metric-label">
+          Jitter
+        </div>
+
+        <div class="metric-value">
+          ${data.jitter_ms} ms
+        </div>
+
       </div>
+
     </div>
-    <div class="ping-log">${rows}</div>
+
+
+    <div class="ping-title">
+
+      <span>
+        Individual probes
+      </span>
+
+      <span>
+        5 attempts
+      </span>
+
+    </div>
+
+
+    <div class="ping-log">
+      ${rows}
+    </div>
+
   `;
+
 }
+
 </script>
 
 </body>
