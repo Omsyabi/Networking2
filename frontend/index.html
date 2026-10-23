@@ -1,1358 +1,749 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FS Check — Latency Scanner</title>
-
-<style>
-/* =========================================================
-   RESET
-========================================================= */
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-:root {
-  --background: #f4efe7;
-  --background-dark: #ebe2d5;
-
-  --card: #fffdf9;
-  --card-soft: #f9f5ee;
-
-  --border: #e4d8c8;
-  --border-dark: #d5c5b2;
-
-  --text: #352b24;
-  --text-soft: #6f6257;
-  --text-light: #9a8d80;
-
-  --primary: #9b5d32;
-  --primary-dark: #744321;
-  --primary-light: #c88655;
-
-  --cream: #f1e3d2;
-
-  --success: #607b5b;
-  --success-bg: #e8f0e4;
-
-  --warning: #b77b35;
-  --warning-bg: #f8ecd9;
-
-  --danger: #b9574e;
-  --danger-bg: #f8e4e1;
-
-  --shadow:
-    0 12px 35px rgba(83, 59, 38, 0.08);
-
-  --shadow-hover:
-    0 18px 45px rgba(83, 59, 38, 0.13);
-
-  --radius: 18px;
-
-  --mono:
-    "JetBrains Mono",
-    "SFMono-Regular",
-    Consolas,
-    monospace;
-
-  --sans:
-    Inter,
-    "Segoe UI",
-    Arial,
-    sans-serif;
-}
-
-
-/* =========================================================
-   BODY
-========================================================= */
-
-body {
-  min-height: 100vh;
-
-  background:
-    radial-gradient(
-      circle at 10% 0%,
-      rgba(200, 134, 85, 0.16),
-      transparent 30%
-    ),
-    radial-gradient(
-      circle at 100% 100%,
-      rgba(155, 93, 50, 0.08),
-      transparent 35%
-    ),
-    var(--background);
-
-  color: var(--text);
-
-  font-family: var(--sans);
-
-  padding: 40px 20px;
-
-  overflow-x: hidden;
-}
-
-
-/* Decorative background */
-
-body::before {
-  content: "";
-
-  position: fixed;
-  inset: 0;
-
-  pointer-events: none;
-
-  opacity: 0.35;
-
-  background-image:
-    linear-gradient(
-      rgba(120, 90, 65, 0.035) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      rgba(120, 90, 65, 0.035) 1px,
-      transparent 1px
-    );
-
-  background-size: 40px 40px;
-
-  mask-image:
-    linear-gradient(
-      to bottom,
-      black,
-      transparent 80%
-    );
-}
-
-
-/* =========================================================
-   MAIN CONTAINER
-========================================================= */
-
-.console {
-  width: 100%;
-  max-width: 900px;
-
-  margin: auto;
-
-  position: relative;
-  z-index: 1;
-}
-
-
-/* =========================================================
-   HEADER
-========================================================= */
-
-.titlebar {
-  display: flex;
-
-  justify-content: space-between;
-  align-items: center;
-
-  margin-bottom: 28px;
-}
-
-
-.brand-area {
-  display: flex;
-  align-items: center;
-
-  gap: 12px;
-}
-
-
-.brand-icon {
-  width: 44px;
-  height: 44px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 13px;
-
-  background: var(--primary);
-
-  color: white;
-
-  font-family: var(--mono);
-  font-size: 14px;
-  font-weight: bold;
-
-  box-shadow:
-    0 8px 20px rgba(155, 93, 50, 0.25);
-}
-
-
-.brand-text {
-  display: flex;
-  flex-direction: column;
-
-  gap: 3px;
-}
-
-
-.brand {
-  font-family: var(--mono);
-
-  font-size: 12px;
-
-  letter-spacing: 0.08em;
-
-  color: var(--text);
-}
-
-
-.brand strong {
-  color: var(--primary);
-}
-
-
-.brand-subtitle {
-  font-size: 11px;
-
-  color: var(--text-light);
-}
-
-
-.clock {
-  padding: 9px 13px;
-
-  border: 1px solid var(--border);
-
-  border-radius: 10px;
-
-  background: rgba(255,255,255,0.55);
-
-  color: var(--text-soft);
-
-  font-family: var(--mono);
-
-  font-size: 11px;
-}
-
-
-/* =========================================================
-   HERO
-========================================================= */
-
-.hero {
-  margin-bottom: 25px;
-}
-
-
-h1 {
-  font-size: clamp(34px, 6vw, 52px);
-
-  line-height: 1.05;
-
-  letter-spacing: -0.045em;
-
-  font-weight: 750;
-
-  color: var(--text);
-
-  margin-bottom: 13px;
-}
-
-
-h1 span {
-  color: var(--primary);
-}
-
-
-.hero-description {
-  max-width: 570px;
-
-  color: var(--text-soft);
-
-  font-size: 14px;
-
-  line-height: 1.7;
-}
-
-
-/* =========================================================
-   CONTROL CARD
-========================================================= */
-
-.control-card {
-  display: grid;
-
-  grid-template-columns: 1fr auto;
-
-  align-items: center;
-
-  gap: 20px;
-
-  padding: 20px;
-
-  background: var(--card);
-
-  border: 1px solid var(--border);
-
-  border-radius: var(--radius);
-
-  box-shadow: var(--shadow);
-
-  margin-bottom: 20px;
-}
-
-
-.target-info {
-  display: flex;
-
-  align-items: center;
-
-  gap: 13px;
-}
-
-
-.target-icon {
-  width: 43px;
-  height: 43px;
-
-  flex-shrink: 0;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 12px;
-
-  background: var(--cream);
-
-  color: var(--primary);
-
-  font-size: 19px;
-}
-
-
-.target-label {
-  color: var(--text-light);
-
-  font-family: var(--mono);
-
-  font-size: 9px;
-
-  letter-spacing: 0.1em;
-
-  text-transform: uppercase;
-
-  margin-bottom: 4px;
-}
-
-
-.target-value {
-  color: var(--text);
-
-  font-family: var(--mono);
-
-  font-size: 14px;
-
-  font-weight: 600;
-}
-
-
-/* =========================================================
-   SCAN BUTTON
-========================================================= */
-
-.scan-btn {
-  min-width: 190px;
-
-  border: none;
-
-  padding: 14px 20px;
-
-  border-radius: 12px;
-
-  background: var(--primary);
-
-  color: #fff;
-
-  font-family: var(--sans);
-
-  font-size: 12px;
-
-  font-weight: 700;
-
-  letter-spacing: 0.06em;
-
-  text-transform: uppercase;
-
-  cursor: pointer;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  gap: 9px;
-
-  box-shadow:
-    0 8px 20px rgba(155, 93, 50, 0.22);
-
-  transition:
-    transform 0.2s ease,
-    background 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-
-.scan-btn:hover {
-  background: var(--primary-dark);
-
-  transform: translateY(-2px);
-
-  box-shadow:
-    0 12px 25px rgba(155, 93, 50, 0.27);
-}
-
-
-.scan-btn:active {
-  transform: translateY(0);
-}
-
-
-.scan-btn:disabled {
-  opacity: 0.65;
-
-  cursor: not-allowed;
-
-  transform: none;
-}
-
-
-.scan-btn .arrow {
-  font-size: 16px;
-
-  transition: transform 0.25s ease;
-}
-
-
-.scan-btn:hover .arrow {
-  transform: translateX(3px);
-}
-
-
-.scan-btn.scanning .arrow {
-  animation: spin 0.9s linear infinite;
-}
-
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-
-.scan-btn.counting #btnLabel {
-  font-variant-numeric: tabular-nums;
-}
-
-
-/* =========================================================
-   RESULTS CONTAINER
-========================================================= */
-
-#result-wrap {
-  max-height: 0;
-
-  overflow: hidden;
-
-  opacity: 0;
-
-  transform: translateY(12px);
-
-  transition:
-    max-height 0.55s ease,
-    opacity 0.35s ease,
-    transform 0.35s ease;
-}
-
-
-#result-wrap.open {
-  max-height: 800px;
-
-  opacity: 1;
-
-  transform: translateY(0);
-}
-
-
-/* =========================================================
-   RESULT PANEL
-========================================================= */
-
-.panel {
-  position: relative;
-
-  overflow: hidden;
-
-  padding: 24px;
-
-  background: var(--card);
-
-  border: 1px solid var(--border);
-
-  border-radius: var(--radius);
-
-  box-shadow: var(--shadow);
-}
-
-
-.panel::before {
-  content: "";
-
-  position: absolute;
-
-  top: 0;
-  left: 0;
-  right: 0;
-
-  height: 4px;
-
-  background:
-    linear-gradient(
-      90deg,
-      var(--primary),
-      var(--primary-light),
-      transparent
-    );
-}
-
-
-/* =========================================================
-   RESULT HEADER
-========================================================= */
-
-.panel-header {
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  gap: 15px;
-
-  padding-bottom: 18px;
-
-  margin-bottom: 20px;
-
-  border-bottom: 1px solid var(--border);
-
-  font-family: var(--mono);
-
-  font-size: 11px;
-
-  color: var(--text-soft);
-
-  text-transform: uppercase;
-
-  letter-spacing: 0.08em;
-}
-
-
-/* =========================================================
-   STATUS
-========================================================= */
-
-.status-pill {
-  padding: 7px 12px;
-
-  border-radius: 999px;
-
-  font-family: var(--sans);
-
-  font-size: 10px;
-
-  font-weight: 700;
-
-  letter-spacing: 0.04em;
-}
-
-
-.status-pill.stable {
-  background: var(--success-bg);
-
-  color: var(--success);
-
-  border: 1px solid #cbdcc6;
-}
-
-
-.status-pill.unstable {
-  background: var(--warning-bg);
-
-  color: var(--warning);
-
-  border: 1px solid #ecd5ad;
-}
-
-
-.status-pill.down {
-  background: var(--danger-bg);
-
-  color: var(--danger);
-
-  border: 1px solid #edc6c1;
-}
-
-
-/* =========================================================
-   METRICS
-========================================================= */
-
-.metric-grid {
-  display: grid;
-
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
-
-  gap: 15px;
-
-  margin-bottom: 22px;
-}
-
-
-.metric {
-  padding: 20px;
-
-  background: var(--card-soft);
-
-  border: 1px solid var(--border);
-
-  border-radius: 14px;
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
-}
-
-
-.metric:hover {
-  transform: translateY(-3px);
-
-  border-color: var(--border-dark);
-
-  box-shadow: var(--shadow);
-}
-
-
-.metric-label {
-  margin-bottom: 9px;
-
-  color: var(--text-light);
-
-  font-family: var(--mono);
-
-  font-size: 9px;
-
-  font-weight: 600;
-
-  letter-spacing: 0.1em;
-
-  text-transform: uppercase;
-}
-
-
-.metric-value {
-  color: var(--text);
-
-  font-family: var(--mono);
-
-  font-size: clamp(23px, 5vw, 30px);
-
-  font-weight: 700;
-
-  letter-spacing: -0.04em;
-}
-
-
-.metric-value.accent {
-  color: var(--primary);
-}
-
-
-/* =========================================================
-   PING SECTION
-========================================================= */
-
-.ping-title {
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  margin-bottom: 10px;
-
-  color: var(--text-soft);
-
-  font-size: 10px;
-
-  font-family: var(--mono);
-
-  text-transform: uppercase;
-
-  letter-spacing: 0.1em;
-}
-
-
-.ping-log {
-  border: 1px solid var(--border);
-
-  border-radius: 12px;
-
-  overflow: hidden;
-
-  background: #fcfaf6;
-}
-
-
-.ping-log .row {
-  min-height: 39px;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  padding: 7px 13px;
-
-  border-bottom: 1px solid var(--border);
-
-  font-family: var(--mono);
-
-  font-size: 11px;
-
-  color: var(--text-light);
-
-  transition:
-    background 0.15s ease,
-    padding 0.15s ease;
-}
-
-
-.ping-log .row:last-child {
-  border-bottom: none;
-}
-
-
-.ping-log .row:hover {
-  background: var(--cream);
-
-  padding-left: 17px;
-}
-
-
-.ping-log .row span:last-child {
-  color: var(--text);
-
-  font-weight: 600;
-}
-
-
-/* =========================================================
-   ERROR
-========================================================= */
-
-.error-text {
-  padding: 15px;
-
-  border-radius: 10px;
-
-  background: var(--danger-bg);
-
-  border: 1px solid #edc6c1;
-
-  color: var(--danger);
-
-  font-family: var(--mono);
-
-  font-size: 12px;
-
-  line-height: 1.7;
-}
-
-
-/* =========================================================
-   FOOTER
-========================================================= */
-
-footer {
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  gap: 8px;
-
-  margin-top: 18px;
-
-  color: var(--text-light);
-
-  font-family: var(--mono);
-
-  font-size: 9px;
-
-  letter-spacing: 0.08em;
-
-  text-transform: uppercase;
-
-  text-align: center;
-}
-
-
-footer::before {
-  content: "";
-
-  width: 5px;
-  height: 5px;
-
-  border-radius: 50%;
-
-  background: var(--success);
-}
-
-
-/* =========================================================
-   TABLET
-========================================================= */
-
-@media (max-width: 700px) {
-
-  body {
-    padding: 25px 16px;
-  }
-
-  .console {
-    max-width: 620px;
-  }
-
-  .control-card {
-    grid-template-columns: 1fr;
-  }
-
-  .scan-btn {
-    width: 100%;
-  }
-}
-
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media (max-width: 500px) {
-
-  body {
-    padding: 18px 12px;
-  }
-
-  .titlebar {
-    margin-bottom: 23px;
-  }
-
-  .brand-icon {
-    width: 39px;
-    height: 39px;
-
-    border-radius: 11px;
-  }
-
-  .brand {
-    font-size: 10px;
-  }
-
-  .brand-subtitle {
-    font-size: 9px;
-  }
-
-  .clock {
-    font-size: 9px;
-
-    padding: 7px 9px;
-  }
-
-  h1 {
-    font-size: 35px;
-
-    margin-bottom: 12px;
-  }
-
-  .hero-description {
-    font-size: 12px;
-  }
-
-  .control-card {
-    padding: 15px;
-
-    border-radius: 15px;
-  }
-
-  .target-value {
-    font-size: 12px;
-  }
-
-  .scan-btn {
-    min-height: 50px;
-  }
-
-  .panel {
-    padding: 17px;
-
-    border-radius: 15px;
-  }
-
-  .panel-header {
-    align-items: flex-start;
-
-    flex-direction: column;
-
-    gap: 10px;
-  }
-
-  .status-pill {
-    align-self: flex-start;
-  }
-
-  .metric-grid {
-    grid-template-columns: 1fr;
-
-    gap: 10px;
-  }
-
-  .metric {
-    padding: 16px;
-  }
-
-  .metric-value {
-    font-size: 24px;
-  }
-
-  footer {
-    line-height: 1.6;
-  }
-}
-
-
-/* =========================================================
-   SMALL PHONES
-========================================================= */
-
-@media (max-width: 350px) {
-
-  body {
-    padding: 15px 10px;
-  }
-
-  .clock {
-    display: none;
-  }
-
-  h1 {
-    font-size: 30px;
-  }
-
-  .panel {
-    padding: 14px;
-  }
-
-  .ping-log .row {
-    font-size: 9px;
-  }
-}
-
-
-/* =========================================================
-   ACCESSIBILITY
-========================================================= */
-
-@media (prefers-reduced-motion: reduce) {
-
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-
-    animation-iteration-count: 1 !important;
-
-    transition-duration: 0.01ms !important;
-  }
-}
-
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>FS Check — Network Monitor</title>
+
+    <style>
+        :root {
+            --bg: #f5eee3;
+            --panel: #fffaf2;
+            --line: #dfcfbb;
+            --text: #3d2b1f;
+            --text-dim: #887565;
+            --accent: #795548;
+            --accent-dark: #5d4037;
+            --accent-light: #ead9c5;
+            --success: #507452;
+            --danger: #a44c40;
+            --shadow: 0 8px 24px rgba(75, 49, 31, 0.07);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        button:focus-visible {
+            outline: 3px solid #bd9873;
+            outline-offset: 3px;
+        }
+
+        .topbar {
+            background: var(--accent-dark);
+            color: #fffaf2;
+            padding: 20px 6%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            background: #8d6e63;
+            font-size: 23px;
+        }
+
+        .brand h1 {
+            font-size: 22px;
+            letter-spacing: 1px;
+        }
+
+        .brand p {
+            font-size: 12px;
+            color: #e4d4c4;
+        }
+
+        .connection-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #f0e2d2;
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            background: #a5c99a;
+            border-radius: 50%;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 36px 24px 50px;
+        }
+
+        .welcome {
+            margin-bottom: 28px;
+        }
+
+        .eyebrow {
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .welcome h2 {
+            font-size: clamp(25px, 4vw, 34px);
+            margin: 6px 0;
+        }
+
+        .welcome p {
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+
+        .section-heading {
+            margin-bottom: 18px;
+        }
+
+        .section-heading h2 {
+            font-size: 21px;
+        }
+
+        .section-heading p {
+            color: var(--text-dim);
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+            min-width: 0;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .summary-card {
+            background: #f3e7d7;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 18px;
+            min-width: 0;
+        }
+
+        .summary-card span {
+            display: block;
+            color: var(--text-dim);
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .summary-card strong {
+            display: block;
+            font-size: clamp(19px, 3vw, 27px);
+            overflow-wrap: anywhere;
+        }
+
+        .summary-card small {
+            display: block;
+            color: var(--text-dim);
+            margin-top: 5px;
+        }
+
+        .button {
+            border: none;
+            border-radius: 8px;
+            background: var(--accent);
+            color: white;
+            padding: 11px 18px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .button:hover {
+            background: var(--accent-dark);
+        }
+
+        .button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .button-secondary {
+            background: var(--accent-light);
+            color: var(--accent-dark);
+            border: 1px solid var(--line);
+        }
+
+        .button-secondary:hover {
+            background: #dfc8ad;
+        }
+
+        .section-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .message {
+            color: var(--text-dim);
+            font-size: 13px;
+            margin-top: 12px;
+            overflow-wrap: anywhere;
+        }
+
+        .message.error {
+            color: var(--danger);
+        }
+
+        .message.success {
+            color: var(--success);
+        }
+
+        .device-info {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            padding: 15px;
+            background: #faf3e9;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            min-width: 0;
+        }
+
+        .info-box span {
+            display: block;
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+
+        .info-box strong {
+            font-size: 14px;
+            overflow-wrap: anywhere;
+        }
+
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        thead {
+            background: #ead9c5;
+            color: var(--accent-dark);
+        }
+
+        th, td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+            white-space: nowrap;
+        }
+
+        th {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: #fbf1e5;
+        }
+
+        .empty-cell {
+            color: var(--text-dim);
+            text-align: center;
+            padding: 25px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 9px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            background: #e7ddcd;
+            color: var(--accent-dark);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 22px;
+            color: var(--text-dim);
+            font-size: 12px;
+            border-top: 1px solid var(--line);
+        }
+
+        @media (max-width: 700px) {
+            .topbar {
+                padding: 18px 5%;
+            }
+
+            .container {
+                padding: 25px 14px 35px;
+            }
+
+            .panel {
+                padding: 17px;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .summary-card {
+                padding: 15px;
+            }
+
+            .device-info {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .section-actions .button {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="console">
-
-  <!-- HEADER -->
-
-  <div class="titlebar">
-
-    <div class="brand-area">
-
-      <div class="brand-icon">
-        FS
-      </div>
-
-      <div class="brand-text">
-
-        <div class="brand">
-          <strong>FS</strong> CHECK
+<header class="topbar">
+    <div class="brand">
+        <div class="brand-icon">⌁</div>
+        <div>
+            <h1>FS CHECK</h1>
+            <p>Network &amp; Latency Monitor</p>
         </div>
-
-        <div class="brand-subtitle">
-          Network monitoring system
-        </div>
-
-      </div>
-
     </div>
 
-    <div class="clock" id="clock"></div>
-
-  </div>
-
-
-  <!-- HERO -->
-
-  <section class="hero">
-
-    <h1>
-      Network latency
-      <span>scanner</span>
-    </h1>
-
-    <p class="hero-description">
-      Check your connection response time and monitor
-      network stability using multiple latency probes.
-    </p>
-
-  </section>
-
-
-  <!-- CONTROL -->
-
-  <div class="control-card">
-
-    <div class="target-info">
-
-      <div class="target-icon">
-        ◎
-      </div>
-
-      <div>
-
-        <div class="target-label">
-          Scan target
-        </div>
-
-        <div class="target-value">
-          google.com
-        </div>
-
-      </div>
-
+    <div class="connection-label">
+        <span class="status-dot"></span>
+        Local Network Tools
     </div>
+</header>
 
+<main class="container">
 
-    <button
-      class="scan-btn"
-      id="scanBtn"
-      onclick="startScan()"
-    >
+    <section class="welcome">
+        <p class="eyebrow">Network Dashboard</p>
+        <h2>Monitor your connection.</h2>
+        <p>Check latency, discover local network devices, and review saved network records.</p>
+    </section>
 
-      <span class="arrow">
-        &#10148;
-      </span>
+    <!-- LATENCY SCANNER -->
+    <section class="panel">
+        <div class="section-heading">
+            <h2>Latency Scanner</h2>
+            <p>Test your connection to Google and review response times.</p>
+        </div>
 
-      <span id="btnLabel">
-        Scan it
-      </span>
+        <div class="summary-grid">
+            <div class="summary-card">
+                <span>Average Latency</span>
+                <strong id="averageLatency">-- ms</strong>
+                <small>Average response time</small>
+            </div>
 
-    </button>
+            <div class="summary-card">
+                <span>Jitter</span>
+                <strong id="jitterValue">-- ms</strong>
+                <small>Variation in response times</small>
+            </div>
 
-  </div>
+            <div class="summary-card">
+                <span>Connection Stability</span>
+                <strong id="stabilityValue">Not tested</strong>
+                <small id="pingCount">No probes completed</small>
+            </div>
+        </div>
 
+        <div class="section-actions">
+            <button class="button" id="scanLatencyBtn" type="button">
+                Run Latency Test
+            </button>
+        </div>
 
-  <!-- RESULTS -->
+        <p class="message" id="latencyMessage" role="status" aria-live="polite">
+            Ready to test your connection.
+        </p>
 
-  <div id="result-wrap">
+        <p class="message" id="pingResults">Individual ping results will appear here.</p>
+    </section>
 
-    <div class="panel" id="panel"></div>
+    <!-- CONNECTED DEVICES -->
+    <section class="panel">
+        <div class="section-heading">
+            <h2>Connected Devices</h2>
+            <p>View devices discovered on your local subnet.</p>
+        </div>
 
-  </div>
+        <div class="device-info">
+            <div class="info-box">
+                <span>Your Local IP</span>
+                <strong id="localIP">Not scanned</strong>
+            </div>
 
+            <div class="info-box">
+                <span>Local Subnet</span>
+                <strong id="network">Not scanned</strong>
+            </div>
 
-  <!-- FOOTER -->
+            <div class="info-box">
+                <span>Devices Detected</span>
+                <strong id="deviceCount">0</strong>
+            </div>
+        </div>
 
-  <footer>
-    5 probes per scan &middot; ICMP echo
-  </footer>
+        <div class="section-actions">
+            <button class="button" id="scanDevicesBtn" type="button">
+                Scan Local Network
+            </button>
+        </div>
 
-</div>
+        <p class="message" id="deviceMessage" role="status" aria-live="polite">
+            Run a scan to discover devices.
+        </p>
 
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>IP Address</th>
+                        <th>MAC Address</th>
+                        <th>ARP Entry Type</th>
+                    </tr>
+                </thead>
+                <tbody id="deviceTable">
+                    <tr>
+                        <td colspan="3" class="empty-cell">
+                            No scan results yet.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- NETWORK HISTORY -->
+    <section class="panel">
+        <div class="section-heading">
+            <h2>Network Connection History</h2>
+            <p>Save and review the network name, local IP, date, and time.</p>
+        </div>
+
+        <div class="section-actions">
+            <button class="button" id="recordNetworkBtn" type="button">
+                Record Current Network
+            </button>
+
+            <button class="button button-secondary" id="refreshHistoryBtn" type="button">
+                Refresh History
+            </button>
+        </div>
+
+        <p class="message" id="historyMessage" role="status" aria-live="polite">
+            Saved network records will appear below.
+        </p>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Network Name</th>
+                        <th>Local IP</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTable">
+                    <tr>
+                        <td colspan="4" class="empty-cell">
+                            Loading history...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<footer class="footer">
+    FS Check &copy; 2026 · Network &amp; Latency Monitor
+</footer>
 
 <script>
+    // ---------- SHARED HELPERS ----------
 
-function tickClock() {
+    async function fetchJSON(url, options = {}) {
+        const response = await fetch(url, options);
+        const data = await response.json();
 
-  const el = document.getElementById('clock');
+        if (!response.ok) {
+            throw new Error(data.message || "Request failed.");
+        }
 
-  const now = new Date();
-
-  el.textContent =
-    now.toLocaleTimeString([], {
-      hour12:false
-    });
-
-}
-
-setInterval(tickClock, 1000);
-
-tickClock();
-
-
-function startScan() {
-
-  const btn =
-    document.getElementById('scanBtn');
-
-  const label =
-    document.getElementById('btnLabel');
-
-  btn.disabled = true;
-
-  btn.classList.add('counting');
-
-  let n = 5;
-
-  label.textContent =
-    `Scanning in ${n}...`;
-
-
-  const interval = setInterval(() => {
-
-    n -= 1;
-
-    if (n > 0) {
-
-      label.textContent =
-        `Scanning in ${n}...`;
-
-    } else {
-
-      clearInterval(interval);
-
-      btn.classList.remove('counting');
-
-      runScan();
-
+        return data;
     }
 
-  }, 1000);
+    function showMessage(id, text, type = "") {
+        const element = document.getElementById(id);
+        element.textContent = text;
+        element.className = "message" + (type ? " " + type : "");
+    }
 
-}
+    function showEmptyRow(table, columns, text) {
+        const row = table.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = columns;
+        cell.className = "empty-cell";
+        cell.textContent = text;
+    }
+
+    function addCell(row, value) {
+        const cell = row.insertCell();
+        cell.textContent = value ?? "";
+        return cell;
+    }
+
 
+    // ---------- LATENCY SCANNER ----------
+
+    document.getElementById("scanLatencyBtn").addEventListener("click", async function () {
+        const button = this;
+
+        button.disabled = true;
+        button.textContent = "Testing...";
+
+        showMessage("latencyMessage", "Testing connection to Google...");
+
+        try {
+            const data = await fetchJSON("/scan");
+
+            if (!data.success) {
+                throw new Error(data.message || "Latency test failed.");
+            }
 
-async function runScan() {
+            document.getElementById("averageLatency").textContent =
+                data.average_ms + " ms";
 
-  const btn =
-    document.getElementById('scanBtn');
+            document.getElementById("jitterValue").textContent =
+                data.jitter_ms + " ms";
 
-  const label =
-    document.getElementById('btnLabel');
+            document.getElementById("stabilityValue").textContent =
+                data.stable ? "Stable" : "Unstable";
 
-  const wrap =
-    document.getElementById('result-wrap');
+            document.getElementById("pingCount").textContent =
+                data.count + " successful probes";
 
-  const panel =
-    document.getElementById('panel');
+            document.getElementById("pingResults").textContent =
+                "Ping results: " +
+                data.pings_ms.map(value => value + " ms").join(" · ");
 
+            showMessage(
+                "latencyMessage",
+                "Test completed for " + data.target + ".",
+                "success"
+            );
+
+        } catch (error) {
+            showMessage("latencyMessage", error.message, "error");
+        } finally {
+            button.disabled = false;
+            button.textContent = "Run Latency Test";
+        }
+    });
 
-  btn.classList.add('scanning');
 
-  label.textContent = 'Scanning...';
+    // ---------- CONNECTED DEVICES ----------
 
+    document.getElementById("scanDevicesBtn").addEventListener("click", async function () {
+        const button = this;
+        const table = document.getElementById("deviceTable");
 
-  try {
+        button.disabled = true;
+        button.textContent = "Scanning...";
 
-    const res =
-      await fetch('/scan');
+        showMessage("deviceMessage", "Scanning the local subnet...");
 
-    const data =
-      await res.json();
+        try {
+            const data = await fetchJSON("/devices");
+
+            if (!data.success) {
+                throw new Error(data.message || "Device scan failed.");
+            }
 
-
-    panel.innerHTML =
-      renderResult(data);
-
-    wrap.classList.add('open');
-
-
-  } catch (err) {
-
-    panel.innerHTML = `
-      <div class="error-text">
-        Scan failed: could not reach server.
-      </div>
-    `;
-
-    wrap.classList.add('open');
-
-  }
-
-
-  btn.disabled = false;
-
-  btn.classList.remove('scanning');
-
-  label.textContent = 'Scan again';
-
-}
-
-
-function renderResult(data) {
-
-  if (!data.success) {
-
-    return `
-
-      <div class="panel-header">
-
-        <span>
-          Scan result
-        </span>
-
-        <span class="status-pill down">
-          No response
-        </span>
-
-      </div>
-
-      <div class="error-text">
-        ${data.message}
-      </div>
-
-    `;
-
-  }
-
-
-  const statusClass =
-    data.stable
-      ? 'stable'
-      : 'unstable';
-
-
-  const statusLabel =
-    data.stable
-      ? 'Stable'
-      : 'Unstable';
-
-
-  const rows =
-    data.pings_ms.map((p, i) =>
-
-      `<div class="row">
-
-        <span>
-          probe ${i + 1}
-        </span>
-
-        <span>
-          ${p} ms
-        </span>
-
-      </div>`
-
-    ).join('');
-
-
-  return `
-
-    <div class="panel-header">
-
-      <span>
-        Result &middot; ${data.target}
-      </span>
-
-      <span class="status-pill ${statusClass}">
-        ${statusLabel}
-      </span>
-
-    </div>
-
-
-    <div class="metric-grid">
-
-      <div class="metric">
-
-        <div class="metric-label">
-          Average latency
-        </div>
-
-        <div class="metric-value accent">
-          ${data.average_ms} ms
-        </div>
-
-      </div>
-
-
-      <div class="metric">
-
-        <div class="metric-label">
-          Jitter
-        </div>
-
-        <div class="metric-value">
-          ${data.jitter_ms} ms
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <div class="ping-title">
-
-      <span>
-        Individual probes
-      </span>
-
-      <span>
-        5 attempts
-      </span>
-
-    </div>
-
-
-    <div class="ping-log">
-      ${rows}
-    </div>
-
-  `;
-
-}
-
+            document.getElementById("localIP").textContent = data.local_ip;
+            document.getElementById("network").textContent = data.network;
+            document.getElementById("deviceCount").textContent = data.count;
+
+            table.replaceChildren();
+
+            if (data.devices.length === 0) {
+                showEmptyRow(
+                    table,
+                    3,
+                    "No devices found in the ARP cache. Some devices may not respond."
+                );
+            } else {
+                data.devices.forEach(device => {
+                    const row = table.insertRow();
+
+                    addCell(row, device.ip);
+                    addCell(row, device.mac);
+
+                    const typeCell = addCell(row, "");
+                    const badge = document.createElement("span");
+                    badge.className = "badge";
+                    badge.textContent = device.status;
+                    typeCell.appendChild(badge);
+                });
+            }
+
+            showMessage(
+                "deviceMessage",
+                "Scan completed. " + data.count + " device entries detected.",
+                "success"
+            );
+
+        } catch (error) {
+            showMessage("deviceMessage", error.message, "error");
+        } finally {
+            button.disabled = false;
+            button.textContent = "Scan Local Network";
+        }
+    });
+
+
+    // ---------- NETWORK HISTORY ----------
+
+    async function loadNetworkHistory() {
+        const table = document.getElementById("historyTable");
+
+        try {
+            const data = await fetchJSON("/network-history");
+
+            table.replaceChildren();
+
+            if (!data.history || data.history.length === 0) {
+                showEmptyRow(table, 4, "No network records saved yet.");
+                return;
+            }
+
+            data.history.forEach(record => {
+                const row = table.insertRow();
+
+                addCell(row, record.network_name);
+                addCell(row, record.local_ip);
+                addCell(row, record.date);
+                addCell(row, record.time);
+            });
+
+        } catch (error) {
+            table.replaceChildren();
+            showEmptyRow(table, 4, "Unable to load network history.");
+            showMessage("historyMessage", error.message, "error");
+        }
+    }
+
+    document.getElementById("recordNetworkBtn").addEventListener("click", async function () {
+        const button = this;
+
+        button.disabled = true;
+        button.textContent = "Recording...";
+
+        showMessage("historyMessage", "Saving current network details...");
+
+        try {
+            const data = await fetchJSON("/record-network", {
+                method: "POST"
+            });
+
+            if (!data.success) {
+                throw new Error(data.message || "Could not save record.");
+            }
+
+            showMessage(
+                "historyMessage",
+                "Network record saved successfully.",
+                "success"
+            );
+
+            await loadNetworkHistory();
+
+        } catch (error) {
+            showMessage("historyMessage", error.message, "error");
+        } finally {
+            button.disabled = false;
+            button.textContent = "Record Current Network";
+        }
+    });
+
+    document.getElementById("refreshHistoryBtn").addEventListener("click", async function () {
+        await loadNetworkHistory();
+
+        if (!document.getElementById("historyMessage").classList.contains("error")) {
+            showMessage("historyMessage", "Network history refreshed.", "success");
+        }
+    });
+
+    // Load saved records when the page opens.
+    loadNetworkHistory();
 </script>
 
 </body>
